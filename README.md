@@ -1,2 +1,42 @@
 # SpringConfigRecon
-Internal tool to recognize and merge configuations of springboot microservices
+
+Herramienta para recolectar la configuración de microservicios Spring Boot desplegados en Kubernetes/Openshift, separarla en
+configuración compartida (`application.yml`) y configuración específica de cada microservicio (`<servicio>.yml`).
+
+## Backend (Python/FastAPI)
+
+- Ubicación: `backend/`
+- Ejecuta un endpoint `/analyze` que recibe la URL de `actuator/env` (p. ej. `http://orders.svc.cluster.local/actuator/env`),
+  descarga todas las propiedades y devuelve dos documentos YAML: el recomendado para `application.yml` y el archivo propio del
+  microservicio.
+- Requiere Python 3.11+. Instalación rápida:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+## Frontend (Angular)
+
+- Ubicación: `frontend/`
+- UI simple para disparar el análisis y visualizar los YAMLs sugeridos.
+- Para ejecutar en local necesitas Node 20+ y Angular CLI disponible en el proyecto:
+
+```bash
+cd frontend
+npm install
+npm run start -- --proxy-config proxy.conf.json
+```
+
+> El frontend asume que el backend se expone en `/api`. En Kubernetes puedes montar un Ingress/Route que enrute `/api` al
+> servicio del backend y el resto al frontend.
+
+## Flujo esperado
+
+1. Despliegas el backend en el clúster (ej. como Deployment/Service) y lo expones internamente.
+2. El frontend se comunica con `/api/analyze` enviando `service_name` y `env_url` (p.ej. `http://orders.svc.cluster.local/actuator/env`).
+3. El backend clasifica propiedades comunes (Spring, management, logging, etc.) y específicas del microservicio. El resultado
+   incluye dos cadenas YAML listas para copiar en `application.yml` y `orders.yml` dentro del repositorio de configuración.

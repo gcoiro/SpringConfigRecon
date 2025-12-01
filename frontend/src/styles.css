@@ -1,0 +1,60 @@
+:root {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #f7f7f7;
+  color: #1e1e1e;
+}
+
+body {
+  margin: 0;
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+textarea {
+  width: 100%;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  min-height: 180px;
+}
+
+label {
+  font-weight: 600;
+}
+
+button {
+  background: #0066cc;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+input, textarea {
+  border: 1px solid #dcdcdc;
+  border-radius: 4px;
+  padding: 8px;
+}

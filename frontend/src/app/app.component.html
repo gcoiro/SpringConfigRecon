@@ -1,0 +1,39 @@
+<div class="container">
+  <h1>{{ title }}</h1>
+  <p>Apunta al endpoint <code>.svc.cluster.local/actuator/env</code> de tu microservicio y te mostramos cómo centralizar su configuración.</p>
+
+  <div class="card">
+    <form (ngSubmit)="submit()" [formGroup]="form">
+      <div>
+        <label for="service">Nombre del microservicio</label><br />
+        <input id="service" type="text" formControlName="service_name" placeholder="orders" />
+      </div>
+
+      <div style="margin-top: 12px;">
+        <label for="env">URL del actuator</label><br />
+        <input id="env" type="text" formControlName="env_url" placeholder="http://orders.svc.cluster.local/actuator/env" />
+      </div>
+
+      <div style="margin-top: 12px;">
+        <label>Prefijos considerados compartidos (opcional)</label><br />
+        <textarea formControlName="general_prefixes" placeholder="spring.application\nspring.cloud">{{ prefixes.join('\n') }}</textarea>
+      </div>
+
+      <div class="actions" style="margin-top: 12px;">
+        <button type="submit" [disabled]="loading">{{ loading ? 'Procesando...' : 'Analizar' }}</button>
+        <span *ngIf="error" style="color: #c0392b;">{{ error }}</span>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="result" class="card">
+    <h2>Resultado para {{ result.service_name }}</h2>
+    <p>Propiedades encontradas: {{ result.property_count }} (compartidas: {{ result.general_property_count }}, específicas: {{ result.service_specific_count }})</p>
+
+    <h3>application.yml</h3>
+    <textarea readonly>{{ result.application_yaml }}</textarea>
+
+    <h3 style="margin-top: 16px;">{{ result.service_name }}.yml</h3>
+    <textarea readonly>{{ result.microservice_yaml }}</textarea>
+  </div>
+</div>
