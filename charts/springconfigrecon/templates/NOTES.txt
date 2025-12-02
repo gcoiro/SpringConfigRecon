@@ -1,0 +1,15 @@
+Gracias por instalar SpringConfigRecon.
+
+Deployment:
+- {{ include "springconfigrecon.fullname" . }} (réplicas: {{ .Values.replicaCount }})
+
+Backend:
+- Service: {{ include "springconfigrecon.fullname" . }}-backend (puerto {{ .Values.backend.service.port }})
+
+Frontend:
+- Service: {{ include "springconfigrecon.fullname" . }}-frontend (puerto {{ .Values.frontend.service.port }})
+{{- if .Values.frontend.route.enabled }}
+- Route: {{ include "springconfigrecon.fullname" . }}-frontend (ruta {{ .Values.frontend.route.path }}){{ with .Values.frontend.route.host }} en host {{ . }}{{ end }}
+{{- end }}
+
+> El frontend se expone externamente. Configura la aplicación para que consuma el backend en `http://<service backend>:{{ .Values.backend.service.port }}/api` o mediante un Ingress/Route adicional si lo deseas.

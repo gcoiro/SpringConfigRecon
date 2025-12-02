@@ -1,0 +1,25 @@
+{{- if .Values.frontend.route.enabled }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "springconfigrecon.fullname" . }}-frontend
+  labels:
+    {{- include "springconfigrecon.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  {{ with .Values.frontend.route.host }}
+  host: {{ . }}
+  {{ end }}
+  path: {{ .Values.frontend.route.path }}
+  to:
+    kind: Service
+    name: {{ include "springconfigrecon.fullname" . }}-frontend
+    weight: 100
+  port:
+    targetPort: http
+  {{- if .Values.frontend.route.tls.enabled }}
+  tls:
+    termination: {{ .Values.frontend.route.tls.termination }}
+    insecureEdgeTerminationPolicy: {{ .Values.frontend.route.tls.insecureEdgeTerminationPolicy }}
+  {{- end }}
+{{- end }}
