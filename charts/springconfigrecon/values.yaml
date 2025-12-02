@@ -20,11 +20,17 @@ backend:
 
   service:
     type: ClusterIP
-    port: 8000
+    port: 9150
 
   env: []
 
-  resources: {}
+  resources:
+    limits:
+      cpu: "1"
+      memory: 2Gi
+    requests:
+      cpu: 50m
+      memory: 50Mi
 
 frontend:
   image:
@@ -34,7 +40,7 @@ frontend:
 
   service:
     type: ClusterIP
-    port: 80
+    port: 8080
 
   route:
     enabled: true
@@ -47,4 +53,10 @@ frontend:
 
   env: []
 
-  resources: {}
+  resources:
+    limits:
+      cpu: "1"
+      memory: 2Gi
+    requests:
+      cpu: 50m
+      memory: 50Mi
