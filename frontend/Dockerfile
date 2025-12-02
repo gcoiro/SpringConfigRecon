@@ -1,21 +1,12 @@
-# Build stage
-FROM node:20-alpine AS build
-WORKDIR /app
-
-COPY frontend/package*.json ./
-RUN npm install
-
-COPY frontend .
-RUN npm run build -- --configuration=production
-
-# Runtime stage
 FROM nginx:1.27-alpine
 
-# Replace default server block
+WORKDIR /usr/share/nginx/html
+
+# Configuración de nginx para servir el sitio estático y proxy /api al backend.
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Static assets
-COPY --from=build /app/dist/spring-config-recon-ui/ /usr/share/nginx/html
+# Sitio estático sin necesidad de build de Node/Angular.
+COPY frontend/static/ /usr/share/nginx/html/
 
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
