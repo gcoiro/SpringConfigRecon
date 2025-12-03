@@ -1,22 +1,12 @@
 <div class="container">
   <h1>{{ title }}</h1>
-  <p>Apunta al endpoint <code>.svc.cluster.local/actuator/env</code> de tu microservicio y te mostramos cómo centralizar su configuración.</p>
+  <p>Apunta al endpoint <code>.svc.cluster.local:PUERTO/actuator/env</code> de tu microservicio y te mostramos todas las variables activas y de donde viene cada valor.</p>
 
   <div class="card">
     <form (ngSubmit)="submit()" [formGroup]="form">
-      <div>
-        <label for="service">Nombre del microservicio</label><br />
-        <input id="service" type="text" formControlName="service_name" placeholder="orders" />
-      </div>
-
       <div style="margin-top: 12px;">
         <label for="env">URL del actuator</label><br />
-        <input id="env" type="text" formControlName="env_url" placeholder="http://orders.svc.cluster.local/actuator/env" />
-      </div>
-
-      <div style="margin-top: 12px;">
-        <label>Prefijos considerados compartidos (opcional)</label><br />
-        <textarea formControlName="general_prefixes" placeholder="spring.application\nspring.cloud">{{ prefixes.join('\n') }}</textarea>
+        <input id="env" type="text" formControlName="env_url" placeholder="http://orders.svc.cluster.local:8080/actuator/env" />
       </div>
 
       <div class="actions" style="margin-top: 12px;">
@@ -27,13 +17,29 @@
   </div>
 
   <div *ngIf="result" class="card">
-    <h2>Resultado para {{ result.service_name }}</h2>
-    <p>Propiedades encontradas: {{ result.property_count }} (compartidas: {{ result.general_property_count }}, específicas: {{ result.service_specific_count }})</p>
+    <h2>Variables activas ({{ result.property_count }})</h2>
+    <p>Origen de datos: {{ result.fetched_from }}</p>
 
-    <h3>application.yml</h3>
-    <textarea readonly>{{ result.application_yaml }}</textarea>
-
-    <h3 style="margin-top: 16px;">{{ result.service_name }}.yml</h3>
-    <textarea readonly>{{ result.microservice_yaml }}</textarea>
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 6px 4px;">Llave</th>
+            <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 6px 4px;">Valor usado</th>
+            <th style="text-align: left; border-bottom: 1px solid #ccc; padding: 6px 4px;">Archivo / origen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let prop of result.properties">
+            <td style="padding: 6px 4px; border-bottom: 1px solid #eee; font-family: monospace;">{{ prop.key }}</td>
+            <td style="padding: 6px 4px; border-bottom: 1px solid #eee; font-family: monospace;">{{ prop.value }}</td>
+            <td style="padding: 6px 4px; border-bottom: 1px solid #eee;">
+              <div>{{ prop.source }}</div>
+              <div *ngIf="prop.origin" style="font-size: 12px; color: #555;">{{ prop.origin }}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>

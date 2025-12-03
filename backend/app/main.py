@@ -6,14 +6,24 @@ import yaml
 from fastapi import FastAPI, HTTPException
 
 from .config_classifier import classify_properties, nested_from_properties
-from .config_fetcher import EnvRetrievalError, fetch_actuator_environment, flatten_actuator_properties
-from .schemas import AnalyzeRequest, AnalyzeResponse
+from .config_fetcher import (
+    EnvRetrievalError,
+    collect_property_details,
+    fetch_actuator_environment,
+    flatten_actuator_properties,
+)
+from .schemas import (
+    AnalyzeRequest,
+    AnalyzeResponse,
+    EnvInspectRequest,
+    EnvInspectResponse,
+)
 
 app = FastAPI(
     title="Spring Config Recon",
     description=(
         "Servicio que extrae las propiedades publicadas en /actuator/env y propone "
-        "la separación correcta entre application.yml y el archivo específico del microservicio."
+        "la separaciИn correcta entre application.yml y el archivo especヴfico del microservicio."
     ),
     version="0.1.0",
 )
@@ -24,8 +34,32 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
-@app.post("/analyze", response_model=AnalyzeResponse)
-async def analyze_environment(request: AnalyzeRequest) -> AnalyzeResponse:
+async def _inspect_env(request: EnvInspectRequest) -> EnvInspectResponse:
+    try:
+        env_payload = await fetch_actuator_environment(request.env_url)
+    except EnvRetrievalError as exc:  # pragma: no cover - network
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    properties = collect_property_details(env_payload)
+
+    return EnvInspectResponse(
+        fetched_from=str(request.env_url),
+        property_count=len(properties),
+        properties=properties,
+    )
+
+
+@app.post("/env", response_model=EnvInspectResponse)
+async def inspect_environment(request: EnvInspectRequest) -> EnvInspectResponse:
+    return await _inspect_env(request)
+
+
+@app.post("/api/env", response_model=EnvInspectResponse)
+async def inspect_environment_prefixed(request: EnvInspectRequest) -> EnvInspectResponse:
+    return await _inspect_env(request)
+
+
+async def _analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     try:
         env_payload = await fetch_actuator_environment(request.env_url)
     except EnvRetrievalError as exc:  # pragma: no cover - network
@@ -46,9 +80,9 @@ async def analyze_environment(request: AnalyzeRequest) -> AnalyzeResponse:
 
     summary = {
         "application.yml": (
-            "Configuración compartida que debe vivir en el config repo centralizada en el archivo"
+            "ConfiguraciИn compartida que debe vivir en el config repo centralizada en el archivo"
         ),
-        f"{request.service_name}.yml": "Configuración específica del microservicio para aislar despliegues",
+        f"{request.service_name}.yml": "ConfiguraciИn especヴfica del microservicio para aislar despliegues",
     }
 
     return AnalyzeResponse(
@@ -61,6 +95,16 @@ async def analyze_environment(request: AnalyzeRequest) -> AnalyzeResponse:
         microservice_yaml=micro_yaml,
         summary=summary,
     )
+
+
+@app.post("/analyze", response_model=AnalyzeResponse)
+async def analyze_environment(request: AnalyzeRequest) -> AnalyzeResponse:
+    return await _analyze(request)
+
+
+@app.post("/api/analyze", response_model=AnalyzeResponse)
+async def analyze_environment_prefixed(request: AnalyzeRequest) -> AnalyzeResponse:
+    return await _analyze(request)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual start

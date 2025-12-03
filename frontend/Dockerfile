@@ -1,12 +1,14 @@
-FROM nginx:1.27-alpine
+FROM nginx:1.29.3-trixie-perl
 
 WORKDIR /usr/share/nginx/html
 
-# Configuración de nginx para servir el sitio estático y proxy /api al backend.
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Sitio estático sin necesidad de build de Node/Angular.
 COPY frontend/static/ /usr/share/nginx/html/
+
+# OpenShift runs the container with a random UID; make nginx paths group-writable.
+RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx \
+    && chgrp -R 0 /var/cache/nginx /var/run /var/log/nginx /etc/nginx /usr/share/nginx/html \
+    && chmod -R g+rwX /var/cache/nginx /var/run /var/log/nginx /etc/nginx /usr/share/nginx/html
 
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]

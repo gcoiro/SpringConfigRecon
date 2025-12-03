@@ -34,3 +34,20 @@ class AnalyzeResponse(BaseModel):
     application_yaml: str
     microservice_yaml: str
     summary: Dict[str, str]
+
+
+class EnvProperty(BaseModel):
+    key: str
+    value: object | None = Field(None, description="Valor final que est\u00e1 usando Spring para esta llave")
+    source: str = Field(..., description="Origen que aport\u00f3 el valor (archivo o property source)")
+    origin: Optional[str] = Field(None, description="Detalle del origen entregado por Spring, si est\u00e1 disponible")
+
+
+class EnvInspectRequest(BaseModel):
+    env_url: HttpUrl = Field(..., description="URL completa del endpoint /actuator/env dentro del cl\u00faster")
+
+
+class EnvInspectResponse(BaseModel):
+    fetched_from: str
+    property_count: int
+    properties: List[EnvProperty]

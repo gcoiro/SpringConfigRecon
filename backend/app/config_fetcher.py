@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, List
 
 import httpx
 
@@ -34,4 +34,32 @@ def flatten_actuator_properties(env_payload: Dict) -> Dict[str, str]:
         for key, detail in source_properties.items():
             if key not in properties:  # Preserve first occurrence (highest priority)
                 properties[key] = detail.get("value") if isinstance(detail, dict) else detail
+    return properties
+
+
+def collect_property_details(env_payload: Dict) -> List[Dict[str, object]]:
+    """Return the list of properties with the origin/source that provided each active value."""
+
+    properties: List[Dict[str, object]] = []
+    seen_keys = set()
+    sources = env_payload.get("propertySources") or []
+
+    for source in sources:
+        source_name = source.get("name") or "origen desconocido"
+        source_properties = source.get("properties") or {}
+        for key, detail in source_properties.items():
+            if key in seen_keys:
+                continue  # first occurrence wins (highest priority)
+            seen_keys.add(key)
+
+            value = detail.get("value") if isinstance(detail, dict) else detail
+            origin = detail.get("origin") if isinstance(detail, dict) else None
+            properties.append(
+                {
+                    "key": key,
+                    "value": value,
+                    "source": source_name,
+                    "origin": origin,
+                }
+            )
     return properties

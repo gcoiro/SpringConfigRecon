@@ -10,35 +10,20 @@
   <main class="page">
     <header class="hero">
       <p class="eyebrow">Spring Config Recon</p>
-      <h1>Centraliza la configuración de tus microservicios</h1>
-      <p class="lede">Apunta al endpoint <code>/actuator/env</code> de tu servicio y generamos el YAML recomendado para tu config repo.</p>
+      <h1>Lee tu actuator/env y muestra el origen de cada variable</h1>
+      <p class="lede">Ingresa la URL interna (<code>.svc.cluster.local:PUERTO/actuator/env</code>) y listamos todas las propiedades activas junto a su archivo de origen.</p>
     </header>
 
     <section class="card">
-      <form id="analyze-form">
-        <div class="field">
-          <label for="service_name">Nombre del microservicio</label>
-          <input id="service_name" name="service_name" type="text" required placeholder="orders" autocomplete="off">
-        </div>
-
+      <form id="inspect-form">
         <div class="field">
           <label for="env_url">URL de /actuator/env</label>
-          <input id="env_url" name="env_url" type="url" required placeholder="http://orders.svc.cluster.local/actuator/env">
-        </div>
-
-        <div class="field">
-          <label for="general_prefixes">Prefijos considerados compartidos (uno por línea)</label>
-          <textarea id="general_prefixes" name="general_prefixes" rows="4" spellcheck="false"></textarea>
-          <p class="hint">Si dejas la lista tal cual usamos los prefijos recomendados para Spring/management/logging.</p>
-        </div>
-
-        <div class="field">
-          <label for="general_keys">Claves compartidas adicionales (una por línea, opcional)</label>
-          <textarea id="general_keys" name="general_keys" rows="3" placeholder="management.metrics.export.simple.enabled" spellcheck="false"></textarea>
+          <input id="env_url" name="env_url" type="url" required placeholder="http://orders.svc.cluster.local:8080/actuator/env" autocomplete="off">
+          <p class="hint">Usa la ruta completa accesible desde el cluster. No se necesitan prefijos ni listas adicionales.</p>
         </div>
 
         <div class="actions">
-          <button id="submit-btn" type="submit">Analizar configuración</button>
+          <button id="submit-btn" type="submit">Obtener variables</button>
           <span id="status" role="status" aria-live="polite"></span>
         </div>
       </form>
@@ -47,29 +32,26 @@
     <section class="card" id="result-card" hidden>
       <div class="result-header">
         <div>
-          <p class="eyebrow" id="result-service"></p>
+          <p class="eyebrow">Variables activas</p>
           <h2 id="result-title">Resultado</h2>
           <p class="lede" id="result-meta"></p>
         </div>
         <div class="stat">
-          <span id="result-counts"></span>
+          <span id="result-count"></span>
         </div>
       </div>
 
-      <div class="summary">
-        <h3>Resumen</h3>
-        <ul id="summary-list"></ul>
-      </div>
-
-      <div class="output">
-        <div class="output-block">
-          <div class="output-title">application.yml</div>
-          <textarea id="application_yaml" readonly spellcheck="false"></textarea>
-        </div>
-        <div class="output-block">
-          <div class="output-title" id="microservice-title"></div>
-          <textarea id="microservice_yaml" readonly spellcheck="false"></textarea>
-        </div>
+      <div class="table-wrapper">
+        <table class="properties-table">
+          <thead>
+            <tr>
+              <th>Llave</th>
+              <th>Valor usado</th>
+              <th>Archivo / origen</th>
+            </tr>
+          </thead>
+          <tbody id="properties-body"></tbody>
+        </table>
       </div>
     </section>
   </main>

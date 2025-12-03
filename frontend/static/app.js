@@ -1,37 +1,14 @@
 (function () {
-  const defaults = [
-    "spring.application",
-    "spring.cloud",
-    "spring.profiles",
-    "management.",
-    "logging."
-  ];
-
-  const form = document.getElementById("analyze-form");
-  const serviceInput = document.getElementById("service_name");
+  const form = document.getElementById("inspect-form");
   const envUrlInput = document.getElementById("env_url");
-  const prefixesInput = document.getElementById("general_prefixes");
-  const keysInput = document.getElementById("general_keys");
   const submitBtn = document.getElementById("submit-btn");
   const statusEl = document.getElementById("status");
 
   const resultCard = document.getElementById("result-card");
-  const resultService = document.getElementById("result-service");
+  const resultTitle = document.getElementById("result-title");
   const resultMeta = document.getElementById("result-meta");
-  const resultCounts = document.getElementById("result-counts");
-  const summaryList = document.getElementById("summary-list");
-  const applicationArea = document.getElementById("application_yaml");
-  const microserviceTitle = document.getElementById("microservice-title");
-  const microserviceArea = document.getElementById("microservice_yaml");
-
-  prefixesInput.value = defaults.join("\n");
-
-  function linesToArray(value) {
-    return value
-      .split("\n")
-      .map((v) => v.trim())
-      .filter(Boolean);
-  }
+  const resultCount = document.getElementById("result-count");
+  const propertiesBody = document.getElementById("properties-body");
 
   function setLoading(isLoading) {
     submitBtn.disabled = isLoading;
@@ -39,46 +16,64 @@
     statusEl.textContent = isLoading ? "Procesando..." : "";
   }
 
-  function renderResult(data) {
-    const microYamlName = `${data.service_name}.yml`;
-    resultService.textContent = data.service_name;
-    resultMeta.textContent = `Fuente: ${data.fetched_from}`;
-    resultCounts.textContent = `Total: ${data.property_count} · Compartidas: ${data.general_property_count} · Específicas: ${data.service_specific_count}`;
+  function formatValue(value) {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "object") {
+      try {
+        return JSON.stringify(value);
+      } catch (err) {
+        return String(value);
+      }
+    }
+    return String(value);
+  }
 
-    summaryList.innerHTML = "";
-    Object.entries(data.summary || {}).forEach(([name, description]) => {
-      const li = document.createElement("li");
-      li.textContent = `${name}: ${description}`;
-      summaryList.appendChild(li);
+  function renderProperties(properties) {
+    propertiesBody.innerHTML = "";
+
+    if (!properties.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 3;
+      cell.textContent = "No se recibieron propiedades desde /actuator/env.";
+      row.appendChild(cell);
+      propertiesBody.appendChild(row);
+      return;
+    }
+
+    properties.forEach((prop) => {
+      const row = document.createElement("tr");
+
+      const keyCell = document.createElement("td");
+      keyCell.textContent = prop.key;
+      keyCell.classList.add("mono");
+
+      const valueCell = document.createElement("td");
+      valueCell.textContent = formatValue(prop.value);
+      valueCell.classList.add("mono");
+
+      const sourceCell = document.createElement("td");
+      sourceCell.innerHTML = `<div>${prop.source || "sin origen"}</div>`;
+      if (prop.origin) {
+        const origin = document.createElement("div");
+        origin.textContent = prop.origin;
+        origin.classList.add("muted");
+        sourceCell.appendChild(origin);
+      }
+
+      row.appendChild(keyCell);
+      row.appendChild(valueCell);
+      row.appendChild(sourceCell);
+      propertiesBody.appendChild(row);
     });
-
-    applicationArea.value = data.application_yaml || "";
-    microserviceTitle.textContent = microYamlName;
-    microserviceArea.value = data.microservice_yaml || "";
-
-    resultCard.hidden = false;
   }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const payload = {
-      service_name: serviceInput.value.trim(),
-      env_url: envUrlInput.value.trim()
-    };
-
-    const generalPrefixes = linesToArray(prefixesInput.value);
-    if (generalPrefixes.length) {
-      payload.general_prefixes = generalPrefixes;
-    }
-
-    const generalKeys = linesToArray(keysInput.value);
-    if (generalKeys.length) {
-      payload.general_keys = generalKeys;
-    }
-
-    if (!payload.service_name || !payload.env_url) {
-      statusEl.textContent = "Completa los campos obligatorios.";
+    const envUrl = envUrlInput.value.trim();
+    if (!envUrl) {
+      statusEl.textContent = "Ingresa la URL del actuator.";
       statusEl.classList.add("error");
       return;
     }
@@ -87,10 +82,10 @@
     resultCard.hidden = true;
 
     try {
-      const response = await fetch("/api/analyze", {
+      const response = await fetch("/api/env", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ env_url: envUrl })
       });
 
       if (!response.ok) {
@@ -105,7 +100,12 @@
       }
 
       const data = await response.json();
-      renderResult(data);
+      resultTitle.textContent = envUrl;
+      resultMeta.textContent = `Fuente: ${data.fetched_from}`;
+      resultCount.textContent = `Propiedades activas: ${data.property_count}`;
+
+      renderProperties(data.properties || []);
+      resultCard.hidden = false;
       statusEl.textContent = "Listo";
     } catch (error) {
       statusEl.textContent = error?.message || "No pudimos contactar el backend.";

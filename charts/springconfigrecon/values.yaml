@@ -35,7 +35,7 @@ backend:
 frontend:
   image:
     repository: ghcr.io/your-org/springconfigrecon-frontend
-    tag: "latest"
+    tag: "1.29.3-trixie-perl"
     pullPolicy: IfNotPresent
 
   service:

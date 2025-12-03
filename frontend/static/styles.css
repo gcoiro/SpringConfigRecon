@@ -199,6 +199,39 @@ button:disabled {
   border-radius: 10px;
 }
 
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.properties-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.properties-table th,
+.properties-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.properties-table th {
+  background: #f8fafc;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.properties-table .mono {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.properties-table .muted {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
 @media (max-width: 640px) {
   .actions {
     flex-direction: column;
